@@ -1,5 +1,7 @@
-﻿using FluentAssertions;
+﻿using FakeItEasy;
+using FluentAssertions;
 using FluentAssertions.Formatting;
+using NetworkUtility.DNS;
 using NetworkUtility.Ping;
 using System;
 using System.Collections.Generic;
@@ -10,19 +12,21 @@ using System.Threading.Tasks;
 
 namespace NetworkUtility.Tests.PinTests
 {
-    public class NetworkServiceTests : IClassFixture<NetworkServices>
+    public class NetworkServiceTests
     {
         private readonly NetworkServices _pingServices;
-        public NetworkServiceTests(NetworkServices services)
+        private readonly IDns _dns;
+        public NetworkServiceTests()
         {
-            _pingServices = services;
+            _dns = A.Fake<IDns>();
+            _pingServices = new NetworkServices(_dns);
         }
-
+        
         [Fact]
         public void NetworkService_SendPing_ReturnString()
         {
             //Arrange
-
+            A.CallTo(() => _dns.SendDNS()).Returns(true);
             //Act
             var result = _pingServices.SendPing();
             //Assert
@@ -76,7 +80,6 @@ namespace NetworkUtility.Tests.PinTests
             //Act
             var result = _pingServices.GetPingOptions();
             //Assert
-            //result.Should().BeOfType<IEnumerable<PingOptions>>();
             result.Should().ContainEquivalentOf(expected);
             result.Should().Contain(x => x.DontFragment == true);
             result.Should().Contain(x => x.Ttl == 1);
